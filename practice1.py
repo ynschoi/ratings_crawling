@@ -1,23 +1,34 @@
+from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 import time
 from selenium.webdriver.support.select import Select
 from selenium.webdriver.common.by import By
 import openpyxl 
+from datetime import datetime
+
+rating_period = input("기간을 설정하세요(당일공시/최근1주일/최근2주일/최근1개월): ")
+excel_name = input("엑셀파일명: ")
+
+chromedriver = 'C:/Youngsu/02. 상시업무/10. 자동화프로젝트/env/ratings/chromedriver'
 
 wb = openpyxl.Workbook()
 sheet = wb.active
-sheet.append(["1"])
-
+sheet.append(["SPC","회차","증권종류","발행금액","발행일","만기일","평가종류","평가일","공시일","등급"])
+now = datetime.now()
+date = now.strftime('%Y.%m.%d')
+excel_filename = excel_name +"_" + date + "(KR).xlsx"
 
 chrome_options = webdriver.ChromeOptions()
-chrome_options.add_experimental_option("excludeSwitches", ["enable-logging"])
-driver = webdriver.Chrome('C:/Youngsu/02. 상시업무/10. 자동화프로젝트/env/ratings/chromedriver', options=chrome_options)
-driver.implicitly_wait(3)
+chrome_options.add_argument('headless')
+chrome_options.add_argument('window-size=1920x1080')
+chrome_options.add_argument("disable-gpu")
+driver = webdriver.Chrome(chromedriver, options=chrome_options)
+driver.implicitly_wait(2)
 driver.get('http://www.rating.co.kr/disclosure/QDisclosure002.do')
 
 select=Select(driver.find_element_by_id("evalDt"))
-select.select_by_visible_text("당일공시")
+select.select_by_visible_text(rating_period)
 select=Select(driver.find_element_by_id("svcty"))
 select.select_by_visible_text("ABS")
 
@@ -32,57 +43,24 @@ j=1
 for i in range(count_trs):
     table = driver.find_element(By.XPATH, "/html/body/div/div/div/div[3]/div[2]/div/div/table/tbody")
     table.find_element(By.XPATH, "/html/body/div/div/div/div[3]/div[2]/div/div/table/tbody/tr[{}]/td[1]/a".format(j)).click()
+    driver.find_element(By.XPATH, "/html/body/div[2]/div/form[1]/div/div[3]/div[1]/ul/li[2]/h3/a").click()
     detail_spc = driver.find_element(By.XPATH, "/html/body/div[2]/div/form[1]/div/div[2]/div[2]/div/table/tbody/tr[1]/td[1]")
     detail_table = driver.find_element(By.XPATH, "/html/body/div[2]/div/form[1]/div/div[3]/div[3]/div[1]/div[2]/div/div/table/tbody")
     for detailtr in detail_table.find_elements(By.TAG_NAME, "tr"):
         td = detailtr.find_elements(By.TAG_NAME, "td")
-        s = "{} , {} , {} , {} , {} , {} , {} , {} , {} , {} \n".format(detail_spc.text, td[0].text, td[1].text , td[2].text, td[3].text, td[4].text, td[5].text, td[6].text, td[7].text, td[8].text)
-        print(s)
-        sheet.append([s])
+        s = detail_spc.text
+        s0 = td[0].text
+        s1 = td[1].text
+        s2 = td[2].text
+        s3 = td[3].text
+        s4 = td[4].text
+        s5 = td[5].text
+        s6 = td[6].text
+        s7 = td[7].text
+        s8 = td[8].text
+        sheet.append([s,s0,s1,s2,s3,s4,s5,s6,s7,s8])
     j = j + 1
-    print(j)
     driver.back()
 
-wb.save("today1.xlsx")
-
-# j = 0
-# print(tr_numb)
-# for row in range(tr_numb):
-#     trs.find_elements(By.TAG_NAME, "a")[j].click()
-#     driver.back()  # 페이지 뒤로 가기
-#     time.sleep(4)
-
-
-
-# search_input = driver.find_element_by_id('evalDt')
-# search_input.send_keys('케이비증권')
-# search_input.send_keys(Keys.RETURN)
-# print(driver.title)
-
-# 코드 실행을 잠시 멈춘다.
+wb.save(excel_filename)
 time.sleep(2)
-
-# 사용을 마치면 드라이버를 종료시킨다. 
-# driver.quit()
-
-# for tr in table.find_elements(By.TAG_NAME, "tr"):
-
-#     td = tr.find_elements(By.TAG_NAME, "td")
-#     s = "{} , {} , {} , {} , {} , {} , {} , {} , {} \n".format(td[0].text, td[1].text , td[2].text, td[3].text, td[4].text, td[5].text, td[6].text, td[7].text, td[8].text)
-#     print(s)
-#     detail = tr.find_element(By.TAG_NAME, "a")
-#     detail.click() 
-#     detail_table = driver.find_element(By.XPATH, "/html/body/div[2]/div/form[1]/div/div[3]/div[3]/div[1]/div[2]/div/div/table/tbody")
-#     for detailtr in detail_table.find_elements(By.TAG_NAME, "tr"):
-#         detailtd = detailtr.find_elements(By.TAG_NAME, "td")
-
-# time.sleep(2)
-# trs = table.find_elements(By.TAG_NAME, "tr")
-# count_trs = len(trs)
-# j=1
-# for i in range(count_trs):
-#     table = driver.find_element(By.XPATH, "/html/body/div/div/div/div[3]/div[2]/div/div/table/tbody")
-#     table.find_element(By.XPATH, "/html/body/div/div/div/div[3]/div[2]/div/div/table/tbody/tr[{}]/td[1]/a".format(j)).click()
-#     j = j + 1
-#     print(j)
-#     driver.back()
